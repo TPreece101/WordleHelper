@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 
 import string
+from collections import Counter
 
 def load_words():
     with open('wordlist_solutions.txt') as file:
@@ -46,4 +47,20 @@ if len(excludes_letters) > 0:
             & (~df.words.str.contains(letter))
         )
 
-st.dataframe(df[filters])
+filtered_df = df[filters]
+
+words_concat = ''.join(filtered_df.words.values).replace('\n', '')
+letter_dist = Counter(words_concat)
+
+def get_score(word, letter_dist):
+    return sum([letter_dist[w] for w in word])
+
+display_df = (
+    filtered_df
+    .assign(
+        score = lambda x: x.words.apply(lambda y: get_score(y, letter_dist))
+    )
+    .sort_values(by='score', ascending=False)
+)
+
+st.dataframe(display_df)
